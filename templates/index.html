@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing URL Detection</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --danger-color: #ef233c;
+            --safe-color: #2a9d8f;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 850px;
+            width: 100%;
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 30px var(--shadow-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 36px;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-size: 16px;
+            margin-top: 15px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .url-form {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 18px;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            border: 2px solid #ced4da;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:hover {
+            background-color: #f1f1f1;
+        }
+
+        button {
+            padding: 0 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            border-radius: var(--border-radius);
+        }
+
+        button:hover {
+            background-color: #3a56d4;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            font-size: 22px;
+            color: var(--dark-color);
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+
+        .result-card {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            flex: 1;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .result-item:first-child {
+            margin-right: 10px;
+        }
+
+        .result-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item h4 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+
+        .prediction {
+            font-size: 20px;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .safe {
+            background-color: rgba(42, 157, 143, 0.2);
+            color: var(--safe-color);
+        }
+
+        .phishing {
+            background-color: rgba(239, 35, 60, 0.2);
+            color: var(--danger-color);
+        }
+
+        .info-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .info-section h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .info-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            flex: 1;
+            min-width: 250px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 1px solid #e9ecef;
+        }
+
+        .info-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        .info-card p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .result-card {
+                flex-direction: column;
+            }
+
+            .result-item:first-child {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .info-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Phishing URL Detection</h1>
+            <p class="subtitle">Kiểm tra URL để xác định xem đó có phải là trang web lừa đảo hay không với công nghệ học máy tiên tiến.</p>
+        </header>
+
+        <div class="url-form">
+            <form action="/predict" method="POST">
+                <div class="form-group">
+                    <label for="url">Nhập URL cần kiểm tra:</label>
+                    <div class="input-group">
+                        <input type="text" id="url" name="url" required placeholder="https://example.com" autocomplete="off" />
+                        <button type="submit">Kiểm tra</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if url %}
+        <div class="result">
+            <h3>Kết quả cho: {{ url }}</h3>
+            <div class="result-card">
+                <div class="result-item">
+                    <h4>Random Forest</h4>
+                    {% if rf_result == "Phishing" %}
+                    <span class="prediction phishing">Lừa đảo</span>
+                    {% else %}
+                    <span class="prediction safe">An toàn</span>
+                    {% endif %}
+                </div>
+                <div class="result-item">
+                    <h4>XGBoost</h4>
+                    {% if xgb_result == "Phishing" %}
+                    <span class="prediction phishing">Lừa đảo</span>
+                    {% else %}
+                    <span class="prediction safe">An toàn</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% elif error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="info-section">
+ <div class="info-section">
+    <h2>Về công cụ phát hiện lừa đảo</h2>
+    <p>Công cụ này sử dụng các thuật toán học máy mạnh mẽ để phân tích URL và xác định xem nó có khả năng là trang web lừa đảo hay không.</p>
+
+    <div class="info-cards">
+        <div class="info-card">
+            <h3>KHÔNG HOÀN TOÀN CHÍNH XÁC</h3>
+            <p>Công cụ này được phát triển chưa hoàn toàn đầy đủ nên sẽ chưa thực sự đầy đủ các đặc trưng đủ mạnh để phát hiện web phishing. Vì vậy, sẽ có sự sai sót không tránh khỏi.</p>
+        </div>
+        <div class="info-card">
+            <h3>XGBoost</h3>
+            <p>Thuật toán học máy tiên tiến sử dụng gradient boosting để cải thiện độ chính xác bằng cách học từ các lỗi của mô hình trước đó.</p>
+        </div>
+        <div class="info-card">
+            <h3>BẢO VỆ BẢN THÂN</h3>
+            <p>Luôn kiểm tra URL trước khi nhập thông tin cá nhân, đặc biệt là thông tin tài chính hoặc đăng nhập, để tránh bị đánh cắp dữ liệu.</p>
+        </div>
+        <!-- Thêm thông tin bảo mật -->
+        <div class="info-card">
+            <h3>CÁC BIỆN PHÁP BẢO VỆ THÊM MÀ BẠN CẦN BIẾT</h3>
+            <p>Để đảm bảo an toàn hơn khi duyệt web:</p>
+            <ul>
+                <li><strong>Kiểm tra URL trước khi nhập thông tin:</strong> Luôn đảm bảo bạn đang truy cập trang web chính thức, tránh nhấp vào các liên kết lạ hoặc đáng ngờ.</li>
+                <li><strong>Sử dụng HTTPS:</strong> Kiểm tra xem trang web có sử dụng giao thức HTTPS không, vì đây là một dấu hiệu cho thấy trang web sử dụng mã hóa để bảo vệ thông tin của bạn.</li>
+                <li><strong>Sử dụng phần mềm diệt virus và phần mềm chống phần mềm độc hại:</strong> Các phần mềm này giúp bảo vệ thiết bị của bạn khỏi các phần mềm độc hại, bao gồm cả phần mềm gián điệp và virus.</li>
+                <li><strong>Không cung cấp thông tin nhạy cảm:</strong> Nếu bạn nghi ngờ trang web là lừa đảo, đừng nhập thông tin cá nhân hoặc tài khoản của bạn. Các trang web lừa đảo thường yêu cầu bạn nhập thông tin nhạy cảm như số thẻ tín dụng, mật khẩu hoặc số tài khoản ngân hàng.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Phishing URL Detection - Công cụ phát hiện website lừa đảo được phát triển bởi Nguyên Hưng</p>
+</footer>
+    </div>
+</body>
+</html>
